@@ -9,6 +9,9 @@ class Order extends Model
 {
     use SoftDeletes;
 
+    public $fillable = [
+        'user_id'
+    ];
 
     /**
      * Get the user that owns the Order

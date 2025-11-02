@@ -10,6 +10,12 @@ class Product extends Model
 {
     use SoftDeletes;
 
+    public $fillable = [
+        'name',
+        'price',
+        'product_id'
+    ];
+
     /**
      * Get the category that owns the Product
      *

@@ -9,6 +9,10 @@ class Category extends Model
 {
     use SoftDeletes;
 
+    public $fillable = [
+        'name'
+    ];
+
     /**
      * Get all of the products for the Category
      *

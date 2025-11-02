@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
 {
+
+    public $fillable = [
+        'quantity',
+        'product_id',
+        'order_id'
+    ];
     /**
      * Get the product that owns the OrderItem
      *

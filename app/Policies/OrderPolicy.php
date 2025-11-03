@@ -21,15 +21,7 @@ class OrderPolicy
      */
     public function view(User $user, Order $order): bool
     {
-        return $user->id = $order->user_id;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return false;
+        return $user->id === $order->user_id;
     }
 
     /**
@@ -66,6 +58,6 @@ class OrderPolicy
      */
     public function forceDelete(User $user, Order $order): bool
     {
-        return $user->id = $order->user_id;
+        return $user->id === $order->user_id;
     }
 }

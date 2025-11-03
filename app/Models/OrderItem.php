@@ -10,7 +10,8 @@ class OrderItem extends Model
     public $fillable = [
         'quantity',
         'product_id',
-        'order_id'
+        'order_id',
+        'price_on_moment'
     ];
     /**
      * Get the product that owns the OrderItem

@@ -11,14 +11,32 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+
+    public function viewAny(){
+        $this->authorize('viewAny', Order::class);
+
+        $allOrders = Order::with(['user', 'orderItems.product.category'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(15);
+
+        return $this->message('success', 'Pedidos resgatados com sucesso!', $allOrders);
+
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $allOrders = Auth::user()->orders->latest();
 
-        return $this->message('success', 'Dados resgatados com sucesso!', $allOrders);
+        $userId = Auth::user()->id;
+
+        $allOrders = Order::where('user_id', $userId)
+                    ->with(['user', 'orderItems.product.category'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(15);
+
+        return $this->message('success', 'Pedidos resgatados com sucesso!', $allOrders);
+
     }
 
     /**
@@ -29,7 +47,7 @@ class OrderController extends Controller
         $validatedData = $request->validate([
             'orderItems' => 'required|array|min:1',
             'orderItems.*.product_id' => 'required|integer|exists:products,id',
-            'quantity' => 'required|integer|gt:0'
+            'orderItems.*.quantity' => 'required|integer|gt:0'
             ]);
 
         try {
@@ -55,8 +73,8 @@ class OrderController extends Controller
             }
 
             $order = Order::create([
-                'user_id' => $validatedData['user_id'],
-                'total' => $total
+                'user_id' => Auth::user()->id,
+                'final_price' => $total
             ]);
 
             $order->orderItems()->createMany($itemsToCreate);
@@ -75,7 +93,15 @@ class OrderController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $order = Order::with(['user', 'orderItems.product.category'])->find($id);
+
+        if (empty($order)) {
+            return $this->message('error', 'Não foi encontrado nenhum pedido!');
+        }
+
+        $this->authorize('view', $order);
+
+        return $this->message('success', 'Pedido encontrado', $order);
     }
 
     /**
@@ -83,7 +109,66 @@ class OrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validatedData = $request->validate(
+            [
+                'user_id' => 'prohibited',
+                'orderItems' => 'sometimes|array|min:1',
+                'orderItems.*.product_id' => 'sometimes|integer|exists:products,id',
+                'orderItems.*.quantity' => 'sometimes|integer|gt:0'
+            ]);
+
+        $order = Order::with(['user', 'orderItems.product.category'])->find($id);
+
+        if (empty($order)) {
+            return $this->message('error', 'Não foi encontrado nenhum pedido!');
+        }
+
+        $this->authorize('update', $order);
+
+        if ($order->status == -1 || $order->status == 1) {
+            return $this->message('error', 'Não é possível alterar este pedido.'); // 403 Forbidden
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $order->orderItems()->delete();
+
+            $total = 0;
+            $itemsToCreate = [];
+
+            foreach ($validatedData['orderItems'] as $item) {
+                $product = Product::find($item['product_id']);
+
+                // Verificação de estoque (boa prática)
+                if ($item['quantity'] > $product->quantity) {
+                    throw new Exception('Produto ' . $product->name . ' não tem estoque suficiente.');
+                }
+
+                $total += $product->price * $item['quantity'];
+
+                $itemsToCreate[] = [
+                    'product_id'      => $item['product_id'],
+                    'quantity'        => $item['quantity'],
+                    'price_on_moment' => $product->price,
+                ];
+            }
+
+            $order->orderItems()->createMany($itemsToCreate);
+            $order->update([
+                'final_price' => $total
+            ]);
+
+            DB::commit();
+
+            $data = $order->load(['user', 'orderItems.product.category']);
+            return $this->message('success', 'Pedido atualizado com sucesso!', $data);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->message('error', 'Erro ao atualizar o pedido: '.$e->getMessage());
+        }
+
     }
 
     /**
@@ -91,7 +176,22 @@ class OrderController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $order = Order::find($id);
+
+        if (empty($order)) {
+            return $this->message('error', 'Não foi encontrado nenhum pedido!');
+        }
+
+        $this->authorize('delete', $order);
+
+        if ($order) {
+            $order->delete();
+
+            return $this->message('success', 'Pedido apagado com sucesso!');
+        }
+
+        return $this->message('error', 'Não foi encontrado nenhum pedido!');
+
     }
 
     private function message($status, $message, $data = []){

@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Gate;
 class ProductController extends Controller
 {
 
-    private $rules = [
-        'name' => ''
-    ];
 
     /**
      * Display a listing of the resource.
@@ -32,7 +29,7 @@ class ProductController extends Controller
         Gate::authorize('isAdmin');
 
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|unique:products,name|string|max:255',
             'quantity' => 'sometimes|integer|min:0',
             'price' => 'required|numeric|gt:0',
             'category_id' => 'required|integer|exists:categories,id'

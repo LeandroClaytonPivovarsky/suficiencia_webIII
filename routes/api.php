@@ -26,6 +26,7 @@ Route::get('product/{product}', [ProductController::class, 'show']);
 
 
 Route::middleware('auth:sanctum')->group(function(){
+    Route::get('allOrders', [OrderController::class, 'viewAny']);
     Route::apiResource('order', OrderController::class);
     Route::post('category', [CategoryController::class, 'store']);
     Route::patch('category/{category}', [CategoryController::class, 'update']);

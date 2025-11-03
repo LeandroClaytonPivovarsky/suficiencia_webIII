@@ -28,7 +28,7 @@ class CategoryController extends Controller
         Gate::authorize('isAdmin');
 
         $validateData = $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|unique:categories,name|max:255'
         ]);
 
         $category = new Category($validateData);

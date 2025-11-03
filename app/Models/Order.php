@@ -11,7 +11,8 @@ class Order extends Model
 
     public $fillable = [
         'user_id',
-        'status'
+        'status',
+        'final_price'
     ];
 
     /**

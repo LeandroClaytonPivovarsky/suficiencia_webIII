@@ -19,7 +19,7 @@ class OrderController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
 
-        return $this->message('success', 'Pedidos resgatados com sucesso!', $allOrders);
+        return $this->message('success', 'Pedidos resgatados com sucesso!',200, $allOrders);
 
     }
     /**
@@ -35,7 +35,7 @@ class OrderController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
 
-        return $this->message('success', 'Pedidos resgatados com sucesso!', $allOrders);
+        return $this->message('success', 'Pedidos resgatados com sucesso!', 200, $allOrders);
 
     }
 
@@ -60,7 +60,7 @@ class OrderController extends Controller
                 $product = Product::find($item['product_id']);
 
                 if ($item['quantity'] > $product['quantity']) {
-                    return $this->message('error', 'Não há produtos suficientes!');
+                    return $this->message('error', 'Não há produtos suficientes!', 403);
                 }
 
                 $total += $product->price * $item['quantity'];
@@ -96,12 +96,12 @@ class OrderController extends Controller
         $order = Order::with(['user', 'orderItems.product.category'])->find($id);
 
         if (empty($order)) {
-            return $this->message('error', 'Não foi encontrado nenhum pedido!');
+            return $this->message('error', 'Não foi encontrado nenhum pedido!', 404);
         }
 
         $this->authorize('view', $order);
 
-        return $this->message('success', 'Pedido encontrado', $order);
+        return $this->message('success', 'Pedido encontrado',200, $order);
     }
 
     /**
@@ -120,13 +120,13 @@ class OrderController extends Controller
         $order = Order::with(['user', 'orderItems.product.category'])->find($id);
 
         if (empty($order)) {
-            return $this->message('error', 'Não foi encontrado nenhum pedido!');
+            return $this->message('error', 'Não foi encontrado nenhum pedido!', 404);
         }
 
         $this->authorize('update', $order);
 
         if ($order->status == -1 || $order->status == 1) {
-            return $this->message('error', 'Não é possível alterar este pedido.'); // 403 Forbidden
+            return $this->message('error', 'Não é possível alterar este pedido.', 403);
         }
 
         try {
@@ -162,11 +162,11 @@ class OrderController extends Controller
             DB::commit();
 
             $data = $order->load(['user', 'orderItems.product.category']);
-            return $this->message('success', 'Pedido atualizado com sucesso!', $data);
+            return $this->message('success', 'Pedido atualizado com sucesso!',201, $data);
 
         } catch (Exception $e) {
             DB::rollBack();
-            return $this->message('error', 'Erro ao atualizar o pedido: '.$e->getMessage());
+            return $this->message('error', 'Erro ao atualizar o pedido: '.$e->getMessage(), 500);
         }
 
     }
@@ -179,7 +179,7 @@ class OrderController extends Controller
         $order = Order::find($id);
 
         if (empty($order)) {
-            return $this->message('error', 'Não foi encontrado nenhum pedido!');
+            return $this->message('error', 'Não foi encontrado nenhum pedido!', 404);
         }
 
         $this->authorize('delete', $order);
@@ -187,27 +187,27 @@ class OrderController extends Controller
         if ($order) {
             $order->delete();
 
-            return $this->message('success', 'Pedido apagado com sucesso!');
+            return $this->message('success', 'Pedido apagado com sucesso!', 204);
         }
 
-        return $this->message('error', 'Não foi encontrado nenhum pedido!');
+        return $this->message('error', 'Não foi encontrado nenhum pedido!', 404);
 
     }
 
-    private function message($status, $message, $data = []){
+    private function message($status, $message, $code, $data = []){
 
         if (!empty($data)) {
             return response()->json([
                 'status'    => $status,
                 'message'   => $message,
                 'data'      => $data
-            ]);
+            ], $code);
         }
 
         return response()->json([
             'status'    => $status,
             'message'   => $message,
-        ]);
+        ], $code);
 
     }
 }

@@ -17,7 +17,7 @@ class ProductController extends Controller
     {
         $allProducts = Product::with('category')->paginate(15);
 
-        return $this->message('success', 'Produtos listados com sucesso!', $allProducts);
+        return $this->message('success', 'Produtos listados com sucesso!',200, $allProducts);
     }
 
     /**
@@ -39,7 +39,7 @@ class ProductController extends Controller
 
         $product->load('category');
 
-        return $this->message('success', 'Produto criado com sucesso!', $product);
+        return $this->message('success', 'Produto criado com sucesso!',201, $product);
     }
 
     /**
@@ -50,7 +50,7 @@ class ProductController extends Controller
         $product = Product::with('category')->find($id);
 
         if(empty($product)){
-            return $this->message('error', 'Não foi encontrado nenhum produto!');
+            return $this->message('error', 'Não foi encontrado nenhum produto!', 404);
         }
 
         return $this->message('success','Produto encontrado com sucesso!', $product);
@@ -65,7 +65,7 @@ class ProductController extends Controller
         Gate::authorize('isAdmin');
 
         if (empty($request)) {
-            return $this->message('error', 'Não foi recebido nenhum dado');
+            return $this->message('error', 'Não foi recebido nenhum dado', 404);
         }
 
         $validatedData = $request->validate([
@@ -79,9 +79,9 @@ class ProductController extends Controller
 
         if ($product) {
             if($product->update($validatedData)) return $this->message('success','Produto alterado com sucesso', $product);
-            else return $this->message('error', 'Algo deu errado na alteração do produto') ;
+            else return $this->message('error', 'Algo deu errado na alteração do produto', 404) ;
         } else{
-            return $this->message('error', 'Não foi encontrado nenhum produto!');
+            return $this->message('error', 'Não foi encontrado nenhum produto!', 404);
         }
     }
 
@@ -98,26 +98,26 @@ class ProductController extends Controller
         if ($product) {
             $product->delete();
 
-            return $this->message('success', 'Produto removido com sucesso!');
+            return $this->message('success', 'Produto removido com sucesso!', 204);
         }
 
-        return $this->message('error', 'Não foi encontrado nenhum produto!');
+        return $this->message('error', 'Não foi encontrado nenhum produto!', 404);
     }
 
-    private function message($status, $message, $data = []){
+    private function message($status, $message, $code, $data = []){
 
         if (!empty($data)) {
             return response()->json([
                 'status'    => $status,
                 'message'   => $message,
                 'data'      => $data
-            ]);
+            ], $code);
         }
 
         return response()->json([
             'status'    => $status,
             'message'   => $message,
-        ]);
+        ], $code);
 
     }
 }

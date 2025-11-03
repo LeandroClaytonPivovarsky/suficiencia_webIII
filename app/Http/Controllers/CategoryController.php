@@ -16,7 +16,7 @@ class CategoryController extends Controller
     {
         $allCategories = Category::all();
 
-        return response()->json(['status' => 'success', 'message' => 'Categorias resgatadas com sucesso!', 'data' => $allCategories], 201);
+        return response()->json(['status' => 'success', 'message' => 'Categorias resgatadas com sucesso!', 'data' => $allCategories], 200);
     }
 
     /**
@@ -46,10 +46,10 @@ class CategoryController extends Controller
         $category = Category::find($id);
 
         if(!$category || empty($category)){
-            return response()->json(['status' => 'error', 'message' => 'Categoria não encontrada!'], 500);
+            return response()->json(['status' => 'error', 'message' => 'Categoria não encontrada!'], 404);
         }
 
-        return response()->json(['status' => 'success', 'message' => 'Categoria encontrada!', 'data' => $category], 201);
+        return response()->json(['status' => 'success', 'message' => 'Categoria encontrada!', 'data' => $category], 200);
     }
 
     /**
@@ -70,7 +70,7 @@ class CategoryController extends Controller
 
             return response()->json(['status' => 'success', 'message' => 'Categoria atualizada com sucesso!', 'data' => $category], 201);
         }
-        return response()->json(['status' => 'error', 'message' => 'Categoria não encontrada!'], 500);
+        return response()->json(['status' => 'error', 'message' => 'Categoria não encontrada!'], 404);
     }
     /**
      * Remove the specified resource from storage.
@@ -86,6 +86,6 @@ class CategoryController extends Controller
 
             return response()->json(['status' => 'success', 'message' => 'Categoria deletada com sucesso!'], 201);
         }
-        return response()->json(['status' => 'error', 'message' => 'Categoria não encontrada!'], 500);
+        return response()->json(['status' => 'error', 'message' => 'Categoria não encontrada!'], 404);
     }
 }

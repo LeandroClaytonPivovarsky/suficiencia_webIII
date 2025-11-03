@@ -16,7 +16,9 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $allOrders = Auth::user()->orders->latest();
+
+        return $this->message('success', 'Dados resgatados com sucesso!', $allOrders);
     }
 
     /**
@@ -38,6 +40,11 @@ class OrderController extends Controller
 
             foreach ($validatedData['orderItems'] as $item) {
                 $product = Product::find($item['product_id']);
+
+                if ($item['quantity'] > $product['quantity']) {
+                    return $this->message('error', 'Não há produtos suficientes!');
+                }
+
                 $total += $product->price * $item['quantity'];
 
                 $itemsToCreate[] = [
@@ -85,5 +92,22 @@ class OrderController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    private function message($status, $message, $data = []){
+
+        if (!empty($data)) {
+            return response()->json([
+                'status'    => $status,
+                'message'   => $message,
+                'data'      => $data
+            ]);
+        }
+
+        return response()->json([
+            'status'    => $status,
+            'message'   => $message,
+        ]);
+
     }
 }

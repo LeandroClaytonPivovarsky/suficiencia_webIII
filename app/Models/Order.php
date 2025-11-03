@@ -10,7 +10,8 @@ class Order extends Model
     use SoftDeletes;
 
     public $fillable = [
-        'user_id'
+        'user_id',
+        'status'
     ];
 
     /**
